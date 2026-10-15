@@ -28,8 +28,34 @@ export function useApplications() {
   }, []);
 
   useEffect(() => {
-    void reload();
-  }, [reload]);
+    let cancelled = false;
+
+    async function loadInitialApplications() {
+      try {
+        const data = await getApplications();
+
+        if (!cancelled) {
+          setApplications(data);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err instanceof Error ? err.message : "Failed to load applications.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void loadInitialApplications();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const addApplication = async (application: Application) => {
     setSaving(true);
